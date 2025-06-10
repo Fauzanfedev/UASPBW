@@ -1,7 +1,43 @@
 <?php
 // Halaman pengelolaan peminjaman buku perpustakaan
 require "../../config/config.php";
-$dataPeminjam = queryReadData("SELECT peminjaman.id_peminjaman, peminjaman.id_buku, buku.judul, peminjaman.nisn, member.nama, member.kelas, member.jurusan, peminjaman.id_admin,  peminjaman.tgl_peminjaman, peminjaman.tgl_pengembalian 
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['process_return'])) {
+    $id_peminjaman = $_POST['id_peminjaman'];
+
+    // Get peminjaman data
+    $peminjaman = queryReadData("SELECT * FROM peminjaman WHERE id_peminjaman = $id_peminjaman")[0];
+
+    if ($peminjaman) {
+        $id_buku = $peminjaman['id_buku'];
+        $nisn = $peminjaman['nisn'];
+        $id_admin = $peminjaman['id_admin'];
+        $tgl_pengembalian = date('Y-m-d');
+
+        // Insert into pengembalian table
+        $insertQuery = "INSERT INTO pengembalian (id_peminjaman, id_buku, nisn, id_admin, buku_kembali) VALUES ($id_peminjaman, '$id_buku', '$nisn', $id_admin, '$tgl_pengembalian')";
+        $insertResult = queryExecute($insertQuery);
+
+        if ($insertResult) {
+            // Update peminjaman table to mark as returned
+            $updateQuery = "UPDATE peminjaman SET status_pengembalian = 1 WHERE id_peminjaman = $id_peminjaman";
+            queryExecute($updateQuery);
+
+            // Delete peminjaman record to remove from member's list
+            $deleteQuery = "DELETE FROM peminjaman WHERE id_peminjaman = $id_peminjaman";
+            queryExecute($deleteQuery);
+
+            header("Location: peminjamanBuku.php");
+            exit;
+        } else {
+            echo "<script>alert('Gagal memproses pengembalian buku.');</script>";
+        }
+    } else {
+        echo "<script>alert('Data peminjaman tidak ditemukan.');</script>";
+    }
+}
+
+$dataPeminjam = queryReadData("SELECT peminjaman.id_peminjaman, peminjaman.id_buku, buku.judul, peminjaman.nisn, member.nama, member.kelas, member.jurusan, peminjaman.id_admin,  peminjaman.tgl_peminjaman, peminjaman.tgl_pengembalian, peminjaman.status_pengembalian
 FROM peminjaman 
 INNER JOIN member ON peminjaman.nisn = member.nisn
 INNER JOIN buku ON peminjaman.id_buku = buku.id_buku");
@@ -46,6 +82,8 @@ INNER JOIN buku ON peminjaman.id_buku = buku.id_buku");
             <th class="bg-primary text-light">Id Admin</th>
             <th class="bg-primary text-light">Tanggal Peminjaman</th>
             <th class="bg-primary text-light">Tanggal Pengembalian</th>
+            <th class="bg-primary text-light">Aksi</th>
+
           </tr>
         </thead>
        <?php foreach ($dataPeminjam as $item) : ?>
@@ -60,6 +98,16 @@ INNER JOIN buku ON peminjaman.id_buku = buku.id_buku");
       <td><?= $item["id_admin"]; ?></td>
       <td><?= $item["tgl_peminjaman"]; ?></td>
       <td><?= $item["tgl_pengembalian"]; ?></td>
+      <td>
+        <?php if ($item['status_pengembalian'] == 1): ?>
+          <span class="badge bg-success">Sudah Dikembalikan</span>
+        <?php else: ?>
+          <form method="POST" onsubmit="return confirm('Yakin ingin memproses pengembalian buku ini?');">
+            <input type="hidden" name="id_peminjaman" value="<?= $item['id_peminjaman']; ?>">
+            <button type="submit" name="process_return" class="btn btn-success btn-sm">Proses Pengembalian</button>
+          </form>
+        <?php endif; ?>
+      </td>
       </tr>
       <?php endforeach;?>
     </table>
