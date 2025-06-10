@@ -18,6 +18,19 @@ function queryReadData($dataKategori) {
   return $items;
 }
 
+// Execute a query and return true/false or affected rows
+function queryExecute($query) {
+  global $connection;
+  $result = mysqli_query($connection, $query);
+  if ($result === false) {
+    return false;
+  }
+  if (is_bool($result)) {
+    return $result;
+  }
+  return mysqli_affected_rows($connection);
+}
+
 // Menambahkan data buku 
 function tambahBuku($dataBuku) {
   global $connection;
@@ -236,7 +249,7 @@ function pinjamBuku($dataBuku) {
     return 0;
   }
   
-  $queryPinjam = "INSERT INTO peminjaman VALUES(null, '$idBuku', $nisn, $idAdmin, '$tglPinjam', '$tglKembali')";
+  $queryPinjam = "INSERT INTO peminjaman (id_peminjaman, id_buku, nisn, id_admin, tgl_peminjaman, tgl_pengembalian, status_pengembalian) VALUES (null, '$idBuku', $nisn, $idAdmin, '$tglPinjam', '$tglKembali', 0)";
   mysqli_query($connection, $queryPinjam);
   return mysqli_affected_rows($connection);
 }
