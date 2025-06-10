@@ -141,7 +141,8 @@ CREATE TABLE `peminjaman` (
   `nisn` int(11) NOT NULL,
   `id_admin` int(11) NOT NULL,
   `tgl_peminjaman` date NOT NULL,
-  `tgl_pengembalian` date NOT NULL
+  `tgl_pengembalian` date NOT NULL,
+  `status_pengembalian` TINYINT(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
