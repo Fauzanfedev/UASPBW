@@ -49,8 +49,7 @@ WHERE peminjaman.nisn = $akunMember");
         <th class="bg-primary text-light">Nama</th>
         <th class="bg-primary text-light">Nama Admin</th>
         <th class="bg-primary text-light">Tanggal Peminjaman</th>
-        <th class="bg-primary text-light">Tanggal Pengembalian</th>
-        <th class="bg-primary text-light">Aksi</th>
+        <th class="bg-primary text-light">Tenggat Pengembalian</th>
       </tr>
       </thead>
       
@@ -65,7 +64,7 @@ WHERE peminjaman.nisn = $akunMember");
         <td><?= $item["tgl_peminjaman"]; ?></td>
         <td><?= $item["tgl_pengembalian"]; ?></td>
         <td>
-          <a class="btn btn-success" href="pengembalianBuku.php?id=<?= $item["id_peminjaman"]; ?>"> Kembalikan</a>
+          <!-- <a class="btn btn-success" href="pengembalianBuku.php?id=<?= $item["id_peminjaman"]; ?>"> Kembalikan</a> -->
         </td>
       <?php endforeach; ?>
       </tr>
