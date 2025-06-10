@@ -1,11 +1,26 @@
 <?php 
 //Halaman pengelolaan pengembalian Buku Perustakaaan
 require "../../config/config.php";
-$dataPeminjam = queryReadData("SELECT pengembalian.id_pengembalian, pengembalian.id_buku, buku.judul, buku.kategori, pengembalian.nisn, member.nama, member.kelas, member.jurusan, admin.nama_admin, pengembalian.buku_kembali, pengembalian.keterlambatan, pengembalian.denda
+$dataPeminjam = queryReadData("SELECT pengembalian.id_pengembalian, pengembalian.id_buku, buku.judul, buku.kategori, pengembalian.nisn, member.nama, member.kelas, member.jurusan, admin.nama_admin, pengembalian.buku_kembali, peminjaman.tgl_pengembalian AS tgl_jatuh_tempo
 FROM pengembalian
 INNER JOIN buku ON pengembalian.id_buku = buku.id_buku
 INNER JOIN member ON pengembalian.nisn = member.nisn
-INNER JOIN admin ON pengembalian.id_admin = admin.id")
+INNER JOIN admin ON pengembalian.id_admin = admin.id
+INNER JOIN peminjaman ON pengembalian.id_peminjaman = peminjaman.id_peminjaman
+");
+
+function calculateKeterlambatan($tgl_kembali, $tgl_jatuh_tempo) {
+    $dateKembali = new DateTime($tgl_kembali);
+    $dateJatuhTempo = new DateTime($tgl_jatuh_tempo);
+    $interval = $dateKembali->diff($dateJatuhTempo);
+    $daysLate = (int)$interval->format('%r%a');
+    return $daysLate > 0 ? $daysLate : 0;
+}
+
+function calculateDenda($keterlambatan) {
+    $dendaPerHari = 5000;
+    return $keterlambatan * $dendaPerHari;
+}
 ?>
 
 <!DOCTYPE html>
@@ -63,8 +78,18 @@ INNER JOIN admin ON pengembalian.id_admin = admin.id")
         <td><?= $item["jurusan"]; ?></td>
         <td><?= $item["nama_admin"]; ?></td>
         <td><?= $item["buku_kembali"]; ?></td>
-        <td><?= $item["keterlambatan"]; ?></td>
-        <td><?= $item["denda"]; ?></td>
+        <td>
+          <?php 
+            $keterlambatan = calculateKeterlambatan($item["buku_kembali"], $item["tgl_jatuh_tempo"]);
+            echo $keterlambatan . " hari";
+          ?>
+        </td>
+        <td>
+          <?php 
+            $denda = calculateDenda($keterlambatan);
+            echo "Rp " . number_format($denda, 0, ',', '.');
+          ?>
+        </td>
         <td>
           <div class="action">
            <a href="deletePengembalian.php?id=<?= $item["id_pengembalian"]; ?>" class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus data ?');"><i class="fa-solid fa-trash"></i></a>
